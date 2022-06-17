@@ -371,7 +371,7 @@ static FASTCALL_ATTR JSOBJ FASTCALL_MSVC decode_string ( struct DecoderState *ds
   ds->lastType = JT_INVALID;
   ds->start ++;
 
-fprintf("WCHAR_MAX: %X\n", WCHAR_MAX);
+fprintf(stderr, "WCHAR_MAX: %X\n", WCHAR_MAX);
 
   if ( (size_t) (ds->end - ds->start) > escLen)
   {
@@ -498,13 +498,13 @@ fprintf("WCHAR_MAX: %X\n", WCHAR_MAX);
             {
               // Low surrogate immediately following a high surrogate
               // Overwrite existing high surrogate with combined character
-fprintf("Adding to previous: %u\n", (unsigned int)ch);
+fprintf(stderr, "Adding to previous: %u\n", (unsigned int)ch);
               *(escOffset-1) = (((*(escOffset-1) - 0xd800) <<10) | (ch - 0xdc00)) + 0x10000;
             }
             else
 #endif
             {
-fprintf("Appending: %u\n", (unsigned int)ch);
+fprintf(stderr, "Appending: %u\n", (unsigned int)ch);
               *(escOffset++) = (wchar_t) ch;
             }
 #if WCHAR_MAX >= 0x10FFFF
