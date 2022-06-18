@@ -48,7 +48,7 @@ This should be replaced with
   _Static_assert(sizeof(Py_UCS4) == sizeof(JSUINT32));
 when C11 is made mandatory (CPython 3.11+).
 */
-typedef char assert_py_ucs4_is_jsuint32[1 - 2*!!(sizeof(Py_UCS4) == sizeof(JSUINT32))];
+typedef char assert_py_ucs4_is_jsuint32[1 - 2*!(sizeof(Py_UCS4) == sizeof(JSUINT32))];
 
 /* objToJSON */
 PyObject* objToJSON(PyObject* self, PyObject *args, PyObject *kwargs);
