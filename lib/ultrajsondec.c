@@ -41,7 +41,6 @@ https://opensource.apple.com/source/tcl/tcl-14/tcl/license.terms
 #include <assert.h>
 #include <string.h>
 #include <limits.h>
-#include <Python.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <stdint.h>
@@ -58,8 +57,8 @@ struct DecoderState
 {
   char *start;
   char *end;
-  Py_UCS4 *escStart;
-  Py_UCS4 *escEnd;
+  JSUINT32 *escStart;
+  JSUINT32 *escEnd;
   int escHeap;
   int lastType;
   JSUINT32 objDepth;
@@ -358,8 +357,8 @@ static const JSUINT8 g_decoderLookup[256] =
 static FASTCALL_ATTR JSOBJ FASTCALL_MSVC decode_string ( struct DecoderState *ds)
 {
   int index;
-  Py_UCS4 *escOffset;
-  Py_UCS4 *escStart;
+  JSUINT32 *escOffset;
+  JSUINT32 *escStart;
   size_t escLen = (ds->escEnd - ds->escStart);
   JSUINT8 *inputOffset;
   JSUTF16 ch = 0;
@@ -375,11 +374,11 @@ static FASTCALL_ATTR JSOBJ FASTCALL_MSVC decode_string ( struct DecoderState *ds
 
     if (ds->escHeap)
     {
-      if (newSize > (SIZE_MAX / sizeof(Py_UCS4)))
+      if (newSize > (SIZE_MAX / sizeof(JSUINT32)))
       {
         return SetError(ds, -1, "Could not reserve memory block");
       }
-      escStart = (Py_UCS4 *)ds->dec->realloc(ds->escStart, newSize * sizeof(Py_UCS4));
+      escStart = (JSUINT32 *)ds->dec->realloc(ds->escStart, newSize * sizeof(JSUINT32));
       if (!escStart)
       {
         ds->dec->free(ds->escStart);
@@ -389,18 +388,18 @@ static FASTCALL_ATTR JSOBJ FASTCALL_MSVC decode_string ( struct DecoderState *ds
     }
     else
     {
-      Py_UCS4 *oldStart = ds->escStart;
-      if (newSize > (SIZE_MAX / sizeof(Py_UCS4)))
+      JSUINT32 *oldStart = ds->escStart;
+      if (newSize > (SIZE_MAX / sizeof(JSUINT32)))
       {
         return SetError(ds, -1, "Could not reserve memory block");
       }
-      ds->escStart = (Py_UCS4 *) ds->dec->malloc(newSize * sizeof(Py_UCS4));
+      ds->escStart = (JSUINT32 *) ds->dec->malloc(newSize * sizeof(JSUINT32));
       if (!ds->escStart)
       {
         return SetError(ds, -1, "Could not reserve memory block");
       }
       ds->escHeap = 1;
-      memcpy(ds->escStart, oldStart, escLen * sizeof(Py_UCS4));
+      memcpy(ds->escStart, oldStart, escLen * sizeof(JSUINT32));
     }
 
     ds->escEnd = ds->escStart + newSize;
@@ -497,7 +496,7 @@ static FASTCALL_ATTR JSOBJ FASTCALL_MSVC decode_string ( struct DecoderState *ds
             }
             else
             {
-              *(escOffset++) = (Py_UCS4) ch;
+              *(escOffset++) = (JSUINT32) ch;
             }
             if ((ch & 0xfc00) == 0xd800)
             {
@@ -514,7 +513,7 @@ static FASTCALL_ATTR JSOBJ FASTCALL_MSVC decode_string ( struct DecoderState *ds
 
       case 1:
       {
-        *(escOffset++) = (Py_UCS4) (*inputOffset++);
+        *(escOffset++) = (JSUINT32) (*inputOffset++);
         break;
       }
 
@@ -528,7 +527,7 @@ static FASTCALL_ATTR JSOBJ FASTCALL_MSVC decode_string ( struct DecoderState *ds
         }
         ucs |= (*inputOffset++) & 0x3f;
         if (ucs < 0x80) return SetError (ds, -1, "Overlong 2 byte UTF-8 sequence detected when decoding 'string'");
-        *(escOffset++) = (Py_UCS4) ucs;
+        *(escOffset++) = (JSUINT32) ucs;
         break;
       }
 
@@ -551,7 +550,7 @@ static FASTCALL_ATTR JSOBJ FASTCALL_MSVC decode_string ( struct DecoderState *ds
         }
 
         if (ucs < 0x800) return SetError (ds, -1, "Overlong 3 byte UTF-8 sequence detected when encoding string");
-        *(escOffset++) = (Py_UCS4) ucs;
+        *(escOffset++) = (JSUINT32) ucs;
         break;
       }
 
@@ -575,7 +574,7 @@ static FASTCALL_ATTR JSOBJ FASTCALL_MSVC decode_string ( struct DecoderState *ds
 
         if (ucs < 0x10000) return SetError (ds, -1, "Overlong 4 byte UTF-8 sequence detected when decoding 'string'");
 
-        *(escOffset++) = (Py_UCS4) ucs;
+        *(escOffset++) = (JSUINT32) ucs;
         break;
       }
     }
@@ -788,14 +787,14 @@ JSOBJ JSON_DecodeObject(JSONObjectDecoder *dec, const char *buffer, size_t cbBuf
   /*
   FIXME: Base the size of escBuffer of that of cbBuffer so that the unicode escaping doesn't run into the wall each time */
   struct DecoderState ds;
-  Py_UCS4 escBuffer[(JSON_MAX_STACK_BUFFER_SIZE / sizeof(Py_UCS4))];
+  JSUINT32 escBuffer[(JSON_MAX_STACK_BUFFER_SIZE / sizeof(JSUINT32))];
   JSOBJ ret;
 
   ds.start = (char *) buffer;
   ds.end = ds.start + cbBuffer;
 
   ds.escStart = escBuffer;
-  ds.escEnd = ds.escStart + (JSON_MAX_STACK_BUFFER_SIZE / sizeof(Py_UCS4));
+  ds.escEnd = ds.escStart + (JSON_MAX_STACK_BUFFER_SIZE / sizeof(JSUINT32));
   ds.escHeap = 0;
   ds.prv = dec->prv;
   ds.dec = dec;
