@@ -114,6 +114,10 @@ static FASTCALL_ATTR JSOBJ FASTCALL_MSVC decode_numeric (struct DecoderState *ds
     {
       goto DECODE_INF;
     }
+    if (UNLIKELY(*(offset) < '0' || *(offset) > '9'))
+    {
+      return SetError(ds, -1, "Unexpected character found when decoding number");
+    }
     maxIntValue = -(JSUINT64) LLONG_MIN;
     overflowLimit = maxIntValue / 10LL;
   }
