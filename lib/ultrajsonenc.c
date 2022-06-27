@@ -136,6 +136,9 @@ static void Buffer_Realloc (JSONObjectEncoder *enc, size_t cbNeeded)
 
   if (enc->heap)
   {
+#ifdef DEBUG
+    fprintf(stderr, "Reallocing the buffer from size %zu to size %zu\n", curSize, newSize);
+#endif
     enc->start = (char *) enc->realloc (enc->start, newSize);
     if (!enc->start)
     {
@@ -145,6 +148,9 @@ static void Buffer_Realloc (JSONObjectEncoder *enc, size_t cbNeeded)
   }
   else
   {
+#ifdef DEBUG
+    fprintf(stderr, "Mallocing and copying the buffer from size %zu to new size %zu\n", curSize, newSize);
+#endif
     char *oldStart = enc->start;
     enc->heap = 1;
     enc->start = (char *) enc->malloc (newSize);
@@ -159,11 +165,18 @@ static void Buffer_Realloc (JSONObjectEncoder *enc, size_t cbNeeded)
   enc->end = enc->start + newSize;
 }
 
-#define Buffer_Reserve(__enc, __len) \
+#define _Buffer_Reserve(__enc, __len) \
     if ( (size_t) ((__enc)->end - (__enc)->offset) < (size_t) (__len))  \
     {   \
       Buffer_Realloc((__enc), (__len));\
-    }   \
+    }
+#ifdef DEBUG
+#define Buffer_Reserve(__enc, __len) \
+    fprintf(stderr, "Buffer reservation from %s line %d for %zu bytes, buffer has %zu remaining\n", __FILE__, __LINE__, (size_t)__len, (size_t) ((__enc)->end - (__enc)->offset)); \
+    _Buffer_Reserve(__enc, __len);
+#else
+#define Buffer_Reserve _Buffer_Reserve
+#endif
 
 static void *Buffer_memcpy (JSONObjectEncoder *enc, const void *src, size_t n)
 {

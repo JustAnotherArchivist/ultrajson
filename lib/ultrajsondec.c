@@ -371,6 +371,9 @@ static FASTCALL_ATTR JSOBJ FASTCALL_MSVC decode_string ( struct DecoderState *ds
   ds->lastType = JT_INVALID;
   ds->start ++;
 
+#ifdef DEBUG
+  fprintf(stderr, "String decoding buffer requires %zu codepoints, has %zu\n", (size_t) (ds->end - ds->start), escLen);
+#endif
   if ( (size_t) (ds->end - ds->start) > escLen)
   {
     size_t newSize = (ds->end - ds->start);
@@ -381,6 +384,9 @@ static FASTCALL_ATTR JSOBJ FASTCALL_MSVC decode_string ( struct DecoderState *ds
       {
         return SetError(ds, -1, "Could not reserve memory block");
       }
+#ifdef DEBUG
+      fprintf(stderr, "Reallocing string decoding buffer from size %zu to size %zu\n", escLen, newSize);
+#endif
       escStart = (JSUINT32 *)ds->dec->realloc(ds->escStart, newSize * sizeof(JSUINT32));
       if (!escStart)
       {
@@ -396,6 +402,9 @@ static FASTCALL_ATTR JSOBJ FASTCALL_MSVC decode_string ( struct DecoderState *ds
       {
         return SetError(ds, -1, "Could not reserve memory block");
       }
+#ifdef DEBUG
+      fprintf(stderr, "Mallocing and copying string decoding buffer from size %zu to size %zu\n", escLen, newSize);
+#endif
       ds->escStart = (JSUINT32 *) ds->dec->malloc(newSize * sizeof(JSUINT32));
       if (!ds->escStart)
       {
