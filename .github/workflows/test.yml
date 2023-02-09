@@ -33,7 +33,7 @@ jobs:
 
       - name: Tests
         run: |
-          python3 -c 'import ujson; {print("ok" if ujson.loads(bytearray(b"99")) == 99 else "ohno") for _ in range(100)}'
+          python3 tests/issue582.py
 
   success:
     needs: [test]
